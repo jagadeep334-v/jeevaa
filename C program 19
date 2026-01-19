@@ -1,0 +1,74 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_CHAR 1000
+
+// Function to split a string by a delimiter and return a dynamically allocated array of strings
+char** split(char* str, const char* delim, int* count) {
+    int size = 10;
+    char** tokens = (char**)malloc(size * sizeof(char*));
+    *count = 0;
+
+    char* token = strtok(str, delim);
+    while (token != NULL) {
+        if (*count >= size) {
+            size *= 2;
+            tokens = (char**)realloc(tokens, size * sizeof(char*));
+        }
+        tokens[*count] = strdup(token);
+        (*count)++;
+        token = strtok(NULL, delim);
+    }
+    return tokens;
+}
+
+// Parse the document into paragraphs, sentences, and words
+char**** get_document(char* text, int* n_paragraphs, int** n_sentences, int*** n_words) {
+    int para_count;
+    char** paras = split(text, "\n", &para_count);
+    *n_paragraphs = para_count;
+
+    char**** document = (char****)malloc(para_count * sizeof(char***));
+    *n_sentences = (int*)malloc(para_count * sizeof(int));
+    *n_words = (int**)malloc(para_count * sizeof(int*));
+
+    for (int i = 0; i < para_count; i++) {
+        int sentence_count;
+        char** sentences = split(paras[i], ".", &sentence_count);
+        (*n_sentences)[i] = sentence_count;
+
+        (*n_words)[i] = (int*)malloc(sentence_count * sizeof(int));
+        document[i] = (char***)malloc(sentence_count * sizeof(char**));
+
+        for (int j = 0; j < sentence_count; j++) {
+            int word_count;
+            char** words = split(sentences[j], " ", &word_count);
+            (*n_words)[i][j] = word_count;
+            document[i][j] = words;
+        }
+
+        for (int j = 0; j < sentence_count; j++) free(sentences[j]);
+        free(sentences);
+    }
+
+    for (int i = 0; i < para_count; i++) free(paras[i]);
+    free(paras);
+
+    return document;
+}
+
+// Return the k-th paragraph (1-indexed)
+char*** kth_paragraph(char**** document, int k) {
+    return document[k - 1];
+}
+
+// Return the k-th sentence in m-th paragraph (1-indexed)
+char** kth_sentence_in_mth_paragraph(char**** document, int k, int m) {
+    return document[m - 1][k - 1];
+}
+
+// Return the k-th word in m-th sentence of n-th paragraph (1-indexed)
+char* kth_word_in_mth_sentence_of_nth_paragraph(char**** document, int k, int m, int n) {
+    return document[n - 1][m - 1][k - 1];
+}
